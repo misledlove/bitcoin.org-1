@@ -51,10 +51,12 @@ module Jekyll
               sitemap.puts '</url>'
             end
           end
-          next if !/\.html$/.match(file1)
-          next if file1 == 'index.html' || file1 == '404.html'
+        end
+        #Add english alerts pages
+        Dir.foreach('_alerts') do |file|
+          next if file == '.' or file == '..'
           sitemap.puts '<url>'
-          sitemap.puts '  <loc>http://bitcoin.org/'+file1.gsub('.html','')+'</loc>'
+          sitemap.puts '  <loc>http://bitcoin.org/en/alert/'+file.gsub('.html','')+'</loc>'
           sitemap.puts '</url>'
         end
         #Add posts

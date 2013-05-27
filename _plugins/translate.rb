@@ -77,14 +77,15 @@ Liquid::Template.register_tag('translate', Jekyll::TranslateTag)
 module Jekyll
 
   class TranslatePage < Page
-    def initialize(site, base, lang, src, dst)
+    def initialize(site, base, id, lang, srcdir, dstdir, src, dst)
       @site = site
       @base = base
-      @dir = lang
+      @dir = '/'+dstdir
       @name = dst
-
+      @id = id
+      @lang = lang
       self.process(dst)
-      self.read_yaml(File.join(base, '_templates'), src)
+      self.read_yaml(File.join(base, srcdir), src)
       self.data['lang'] = lang
     end
   end
@@ -100,15 +101,30 @@ module Jekyll
       end
       #generate each translated page based on templates
       locs.each do |lang,value|
-        Dir.foreach('_templates') do |src|
-          next if src == '.' or src == '..'
-          id=src.split('.')[0]
+        Dir.foreach('_templates') do |file|
+          next if file == '.' or file == '..'
+          id=file.split('.')[0]
           dst=locs[lang]['url'][id]
           next if dst.nil?
+          src=file
           dst=dst+'.html'
-          site.pages << TranslatePage.new(site, site.source, lang, src, dst)
+          srcdir='_templates'
+          dstdir=lang
+          site.pages << TranslatePage.new(site, site.source, id, lang, srcdir, dstdir, src, dst)
         end
-        site.pages << TranslatePage.new(site, site.source, lang, 'index.html', 'index.html')
+        #generate each translated alert based on templates
+        Dir.foreach('_alerts') do |file|
+          next if file == '.' or file == '..' or lang != 'en'
+          src=file
+          dst=file
+          srcdir='_alerts'
+          dstdir=lang+'/alert'
+          site.pages << TranslatePage.new(site, site.source, '', lang, srcdir, dstdir, src, dst)
+        end
+        #TODO alerts are only generated for english language,
+        #but they could also be translated at some point. They would however
+        #need to fallback to english when no translation is available.
+        site.pages << TranslatePage.new(site, site.source, 'index', lang, '_templates', lang, 'index.html', 'index.html')
       end
     end
   end
